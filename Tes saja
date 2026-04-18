@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Quiz Love</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 90%;
+            animation: slideIn 0.8s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            color: #e91e63;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .btn-open {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            font-size: 1.5em;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .btn-open:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(255, 107, 107, 0.4);
+        }
+
+        .question-container {
+            display: none;
+        }
+
+        .question {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 30px;
+            font-weight: bold;
+        }
+
+        .answer-btn {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            margin: 10px;
+            font-size: 1.2em;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 15px rgba(78, 205, 196, 0.3);
+        }
+
+        .answer-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(78, 205, 196, 0.4);
+        }
+
+        .love-page {
+            display: none;
+            animation: heartBeat 0.6s ease-in-out;
+        }
+
+        @keyframes heartBeat {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .love-message {
+            font-size: 3.5em;
+            color: #e91e63;
+            font-weight: bold;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .hearts {
+            font-size: 4em;
+            color: #ff69b4;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .back-btn {
+            background: #9c27b0;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            margin-top: 20px;
+            font-size: 1em;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: #7b1fa2;
+            transform: translateY(-2px);
+        }
+
+        .progress {
+            width: 100%;
+            height: 8px;
+            background: #ddd;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="mainContainer">
+        <h1>🎉 Selamat Datang! 🎉</h1>
+        <button class="btn-open" onclick="startQuiz()">OPEN</button>
+    </div>
+
+    <div class="container question-container" id="quizContainer">
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <h1 id="questionTitle">Pertanyaan 1</h1>
+        <div class="question" id="questionText"></div>
+        <div id="answers"></div>
+    </div>
+
+    <div class="container love-page" id="lovePage">
+        <div class="love-message">I LOVE YOU SARA 💖</div>
+        <div class="hearts">💕 💖 💗 💝 💖</div>
+        <p style="font-size: 1.5em; color: #333; margin-top: 20px;">
+            Anjay kerennya bocil kepala batu ini! 😍
+        </p>
+        <button class="back-btn" onclick="resetQuiz()">Main Lagi</button>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "2 + 3 = ?",
+                answers: ["4", "5", "6", "7"],
+                correct: 1
+            },
+            {
+                question: "8 × 4 = ?",
+                answers: ["32", "28", "36", "40"],
+                correct: 0
+            },
+            {
+                question: "15 - 7 = ?",
+                answers: ["6", "8", "9", "10"],
+                correct: 1
+            },
+            {
+                question: "9 ÷ 3 = ?",
+                answers: ["2", "3", "4", "5"],
+                correct: 1
+            },
+            {
+                question: "10 + 12 = ?",
+                answers: ["20", "22", "24", "26"],
+                correct: 1
+            }
+        ];
+
+        let currentQuestion = 0;
+
+        function startQuiz() {
+            document.getElementById('mainContainer').style.display = 'none';
+            document.getElementById('quizContainer').style.display = 'block';
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const q = questions[currentQuestion];
+            document.getElementById('questionTitle').textContent = `Pertanyaan ${currentQuestion + 1} dari ${questions.length}`;
+            document.getElementById('questionText').textContent = q.question;
+            
+            const answersDiv = document.getElementById('answers');
+            answersDiv.innerHTML = '';
+            
+            q.answers.forEach((answer, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'answer-btn';
+                btn.textContent = answer;
+                btn.onclick = () => selectAnswer(index);
+                answersDiv.appendChild(btn);
+            });
+
+            // Update progress
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+
+        function selectAnswer(selectedIndex) {
+            if (selectedIndex === questions[currentQuestion].correct) {
+                currentQuestion++;
+                if (currentQuestion < questions.length) {
+                    showQuestion();
+                } else {
+                    showLovePage();
+                }
+            } else {
+                // Jawaban salah, coba lagi
+                alert('Coba lagi ya! 😊');
+            }
+        }
+
+        function showLovePage() {
+            document.getElementById('quizContainer').style.display = 'none';
+            document.getElementById('lovePage').style.display = 'block';
+        }
+
+        function resetQuiz() {
+            document.getElementById('lovePage').style.display = 'none';
+            document.getElementById('mainContainer').style.display = 'block';
+            currentQuestion = 0;
+        }
+    </script>
+</body>
+</html>
