@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Share My Location</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        .container { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 20px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 500px; 
+            width: 90%; 
+            text-align: center;
+        }
+        h1 { color: #333; margin-bottom: 10px; font-size: 2.2em; }
+        .subtitle { color: #666; margin-bottom: 30px; }
+        .btn { 
+            background: linear-gradient(45deg, #ff6b6b, #feca57); 
+            color: white; 
+            border: none; 
+            padding: 15px 40px; 
+            border-radius: 50px; 
+            font-size: 1.1em; 
+            cursor: pointer; 
+            transition: all 0.3s; 
+            margin: 10px;
+            box-shadow: 0 10px 20px rgba(255,107,107,0.3);
+        }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(255,107,107,0.4); }
+        .btn:active { transform: translateY(-1px); }
+        .btn-secondary { background: linear-gradient(45deg, #48dbfb, #0abde3); }
+        .location-card { 
+            background: #f8f9fa; 
+            padding: 25px; 
+            border-radius: 15px; 
+            margin: 20px 0; 
+            display: none; 
+            border-left: 5px solid #48dbfb;
+        }
+        .coord { font-size: 1.2em; font-weight: bold; color: #333; margin: 10px 0; }
+        .map-container { height: 300px; border-radius: 15px; overflow: hidden; margin: 20px 0; }
+        #shareLink { 
+            background: #e9ecef; 
+            padding: 15px; 
+            border-radius: 10px; 
+            word-break: break-all; 
+            font-family: monospace; 
+            margin: 20px 0;
+        }
+        .copy-btn { 
+            background: #28a745; 
+            padding: 8px 20px; 
+            font-size: 0.9em; 
+            margin-top: 10px;
+        }
+        .loading { display: none; text-align: center; margin: 20px 0; }
+        .spinner { border: 3px solid #f3f3f3; border-top: 3px solid #48dbfb; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .privacy { font-size: 0.8em; color: #888; margin-top: 30px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-map-marker-alt"></i> Share Location</h1>
+        <p class="subtitle">Klik tombol untuk bagikan lokasi Anda secara aman</p>
+        
+        <button class="btn" onclick="getLocation()">
+            <i class="fas fa-location-arrow"></i> Bagikan Lokasi Saya
+        </button>
+        
+        <button class="btn btn-secondary" onclick="generateShareLink()">
+            <i class="fas fa-link"></i> Buat Link Pelacakan
+        </button>
+        
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Mengambil lokasi...</p>
+        </div>
+        
+        <div id="locationCard" class="location-card">
+            <div class="coord">
+                <i class="fas fa-globe"></i> 
+                <strong>Lat:</strong> <span id="latitude">-</span>, 
+                <strong>Long:</strong> <span id="longitude">-</span>
+            </div>
+            <div class="coord">
+                <i class="fas fa-clock"></i> 
+                <strong>Waktu:</strong> <span id="timestamp">-</span>
+            </div>
+            <div id="mapContainer" class="map-container"></div>
+            <button class="btn copy-btn" onclick="copyLocation()">
+                <i class="fas fa-copy"></i> Salin Koordinat
+            </button>
+        </div>
+        
+        <div id="shareSection" style="display:none;">
+            <h3><i class="fas fa-share-alt"></i> Link Pelacakan</h3>
+            <div id="shareLink">-</div>
+            <button class="btn" onclick="copyShareLink()">Salin Link</button>
+        </div>
+        
+        <div class="privacy">
+            <strong>100% Aman:</strong> Lokasi hanya diambil setelah Anda izinkan di browser
+        </div>
+    </div>
+
+    <script>
+        let currentLocation = null;
+        let map = null;
+        
+        function getLocation() {
+            if (!navigator.geolocation) {
+                alert('Geolocation tidak didukung browser ini');
+                return;
+            }
+            
+            document.getElementById('loading').style.display = 'block';
+            
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    currentLocation = position.coords;
+                    showLocation(position.coords);
+                    document.getElementById('loading').style.display = 'none';
+                },
+                error => {
+                    document.getElementById('loading').style.display = 'none';
+                    let message = 'Error: ';
+                    switch(error.code) {
+                        case 1: message += 'Lokasi ditolak'; break;
+                        case 2: message += 'Lokasi tidak tersedia'; break;
+                        case 3: message += 'Timeout'; break;
+                        default: message += 'Error tidak diketahui';
+                    }
+                    alert(message);
+                },
+                { 
+                    enableHighAccuracy: true, 
+                    timeout: 15000, 
+                    maximumAge: 30000 
+                }
+            );
+        }
+        
+        function showLocation(coords) {
+            document.getElementById('latitude').textContent = coords.latitude.toFixed(6);
+            document.getElementById('longitude').textContent = coords.longitude.toFixed(6);
+            document.getElementById('timestamp').textContent = new Date().toLocaleString('id-ID');
+            
+            document.getElementById('locationCard').style.display = 'block';
+            loadMap(coords.latitude, coords.longitude);
+        }
+        
+        function loadMap(lat, lng) {
+            const container = document.getElementById('mapContainer');
+            container.innerHTML = `
+                <iframe 
+                    width="100%" 
+                    height="100%" 
+                    frameborder="0" 
+                    style="border:0; border-radius:15px"
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d${100}!2d${lng}!3d${lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2z${lat.toFixed(6)}%2C${lng.toFixed(6)}!5e0!3m2!1sid!2sid!4v${Date.now()}!5m2!1sid!2sid"
+                    allowfullscreen>
+                </iframe>
+            `;
+        }
+        
+        function generateShareLink() {
+            if (!currentLocation) {
+                alert('Ambil lokasi terlebih dahulu!');
+                return;
+            }
+            
+            const url = `${window.location.origin}${window.location.pathname}?lat=${currentLocation.latitude}&lng=${currentLocation.longitude}`;
+            document.getElementById('shareLink').textContent = url;
+            document.getElementById('shareSection').style.display = 'block';
+        }
+        
+        function copyLocation() {
+            if (!currentLocation) return;
+            const text = `Lat: ${currentLocation.latitude.toFixed(6)}, Long: ${currentLocation.longitude.toFixed(6)}`;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Koordinat disalin!');
+            });
+        }
+        
+        function copyShareLink() {
+            const link = document.getElementById('shareLink').textContent;
+            navigator.clipboard.writeText(link).then(() => {
+                alert('Link disalin! Kirim ke teman Anda');
+            });
+        }
+        
+        // Auto-detect jika ada parameter URL
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const lat = urlParams.get('lat');
+            const lng = urlParams.get('lng');
+            
+            if (lat && lng) {
+                document.getElementById('latitude').textContent = parseFloat(lat).toFixed(6);
+                document.getElementById('longitude').textContent = parseFloat(lng).toFixed(6);
+                document.getElementById('locationCard').style.display = 'block';
+                loadMap(parseFloat(lat), parseFloat(lng));
+            }
+        };
+    </script>
+</body>
+</html>
